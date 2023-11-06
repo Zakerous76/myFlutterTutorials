@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "328367545172",
+    "project_id": "firstproject-123fs",
+    "storage_bucket": "firstproject-123fs.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:328367545172:android:7b7e3c823eec4ca4e306c1",
+        "android_client_info": {
+          "package_name": "com.tutorials.myfirsttutorial"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDL2_e8lCwTERYLk9zWibBAuaCCvzlzCiM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
