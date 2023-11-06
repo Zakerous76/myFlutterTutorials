@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:myfirsttutorial/firebase_options.dart';
 import 'package:myfirsttutorial/views/login_view.dart';
 import 'package:myfirsttutorial/views/register_view.dart';
+import 'package:myfirsttutorial/views/verify_email_view.dart';
 
 void main() async {
   WidgetsFlutterBinding
@@ -40,7 +41,16 @@ class HomePage extends StatelessWidget {
         builder: (context, snapshot) {
           switch (snapshot.connectionState) {
             case ConnectionState.done:
-              // final user = FirebaseAuth.instance.currentUser;
+              final user = FirebaseAuth.instance.currentUser;
+              if (user != null) {
+                if (user.emailVerified) {
+                  print("Email is verified");
+                } else {
+                  return const VerifyEmailView();
+                }
+              } else {
+                return const LoginView();
+              }
               // // "If the user is non-null, take it. If the user is null then take false"
               // if (user?.emailVerified ?? false) {
               //   return const Text("Done");
@@ -49,7 +59,7 @@ class HomePage extends StatelessWidget {
               //   // Navigator.of(context).push(MaterialPageRoute(          // Since we are returning a "Column" rather than a scaffold widget from the VerifyEmailView()
               //   //     builder: (context) => const VerifyEmailView()));
               // }
-              return const LoginView();
+              return const Text("Done");
 
             default:
               return const CircularProgressIndicator();
