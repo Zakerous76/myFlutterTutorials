@@ -1,7 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:myfirsttutorial/firebase_options.dart';
 
 class LoginView extends StatefulWidget {
   //Here we converted the previous Stateless homepage to a stateful one
