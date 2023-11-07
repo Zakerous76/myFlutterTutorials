@@ -2,6 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer' as devtools show log;
 
+import 'package:myfirsttutorial/constants/routes.dart';
+
 class RegisterView extends StatefulWidget {
   const RegisterView({super.key});
 
@@ -72,7 +74,7 @@ class _RegisterViewState extends State<RegisterView> {
                         email: email, password: password);
                 devtools.log("User Created: ${userCredential.user?.email}");
                 Navigator.of(context).pushNamedAndRemoveUntil(
-                    "/notes/",
+                    notesRoute,
                     // (route) => false means to remove everything and not to keep anything
                     (_) => false);
               } catch (e) {
@@ -152,8 +154,10 @@ class _RegisterViewState extends State<RegisterView> {
           ),
           TextButton(
             onPressed: () {
-              Navigator.of(context)
-                  .pushNamedAndRemoveUntil("/login/", (route) => false);
+              Navigator.of(context).pushNamedAndRemoveUntil(
+                loginRoute,
+                (route) => false,
+              );
             },
             child: const Text("Already registered? Login here!"),
           )

@@ -1,10 +1,12 @@
 // ignore_for_file: unused_local_variable
 
+// ignore: unused_import
 import 'dart:developer' as devtools show log;
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:myfirsttutorial/constants/routes.dart';
 import 'package:myfirsttutorial/firebase_options.dart';
 import 'package:myfirsttutorial/views/login_view.dart';
 import 'package:myfirsttutorial/views/register_view.dart';
@@ -26,10 +28,11 @@ void main() async {
     ),
     home: const HomePage(),
     routes: {
-      "/login/": (context) =>
+      loginRoute: (context) =>
           const LoginView(), // returns an instance of the loginview
-      "/register/": (context) => const RegisterView(),
-      "/notes/": (context) => const HomePage(),
+      registerRoute: (context) => const RegisterView(),
+      notesRoute: (context) => const NotesView(),
+      mainRoute: (context) => const HomePage(),
     },
   ));
 }
@@ -98,7 +101,7 @@ class _NotesViewState extends State<NotesView> {
                   if (shouldLogout) {
                     await FirebaseAuth.instance.signOut();
                     Navigator.of(context)
-                        .pushNamedAndRemoveUntil("/login/", (_) => false);
+                        .pushNamedAndRemoveUntil(loginRoute, (_) => false);
                   }
                   break;
               }
