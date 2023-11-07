@@ -29,6 +29,7 @@ void main() async {
       "/login/": (context) =>
           const LoginView(), // returns an instance of the loginview
       "/register/": (context) => const RegisterView(),
+      "/notes/": (context) => const HomePage(),
     },
   ));
 }

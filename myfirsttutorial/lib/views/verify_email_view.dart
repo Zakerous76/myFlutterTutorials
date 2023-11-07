@@ -1,3 +1,5 @@
+import 'dart:developer' as devtools show log;
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -21,10 +23,19 @@ class _VerifyEmailViewState extends State<VerifyEmailView> {
           TextButton(
             onPressed: () async {
               final user = FirebaseAuth.instance.currentUser;
-              user?.sendEmailVerification();
+              if (user?.emailVerified == false) {
+                user?.sendEmailVerification();
+                Navigator.of(context)
+                    .pushNamedAndRemoveUntil("/notes/", (_) => false);
+              }
             },
             child: const Text("Send email verification"),
-          )
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context)
+                .pushNamedAndRemoveUntil("/login/", (_) => false),
+            child: const Text("Go to Login screen"),
+          ),
         ],
       ),
     );

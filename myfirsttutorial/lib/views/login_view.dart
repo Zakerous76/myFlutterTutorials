@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'dart:developer' as devtools show log;
 
 class LoginView extends StatefulWidget {
   //Here we converted the previous Stateless homepage to a stateful one
@@ -60,27 +61,35 @@ class _LoginViewState extends State<LoginView> {
           ),
           TextButton(
             onPressed: () async {
-              print("Button Pressed");
+              devtools.log("Button Pressed");
               final email = _email.text;
               final password = _password.text;
               try {
-                final userCredential = await FirebaseAuth.instance
-                    .signInWithEmailAndPassword(
-                        email: email, password: password);
-                print("User logged in: $userCredential");
+                await FirebaseAuth.instance.signInWithEmailAndPassword(
+                  email: email,
+                  password: password,
+                );
+                // ignore: use_build_context_synchronously
+                Navigator.of(context).pushNamedAndRemoveUntil(
+                  "/notes/",
+                  (_) => false,
+                );
               } catch (e) {
                 if (e is FirebaseAuthException) {
-                  if (e.code == "user-not-found")
-                    print("User not found");
-                  else if (e.code == "wrong-password")
-                    print("Wrong password");
-                  else {
-                    print('Firebase Authentication Error: ${e.code}');
-                    print(
-                        'Firebase Authentication Error Message: ${e.message}');
+                  if (e.code == "user-not-found") {
+                    devtools.log("User not found");
+                  } else if (e.code == "wrong-password") {
+                    devtools.log("Wrong password");
+                  } else {
+                    devtools.log(
+                      'Firebase Authentication Error: ${e.code}',
+                    );
+                    devtools.log(
+                      'Firebase Authentication Error Message: ${e.message}',
+                    );
                   }
                 } else {
-                  print('Error: $e');
+                  devtools.log('Error: $e');
                 }
               }
             },
@@ -88,8 +97,10 @@ class _LoginViewState extends State<LoginView> {
           ),
           TextButton(
               onPressed: () {
-                Navigator.of(context)
-                    .pushNamedAndRemoveUntil("/register/", (route) => false);
+                Navigator.of(context).pushNamedAndRemoveUntil(
+                  "/register/",
+                  (route) => false,
+                );
               },
               child: const Text("Not registered yet? Register Now!"))
         ],
