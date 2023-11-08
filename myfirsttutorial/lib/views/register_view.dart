@@ -1,8 +1,11 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer' as devtools show log;
 
 import 'package:myfirsttutorial/constants/routes.dart';
+import 'package:myfirsttutorial/utilities/show_error_dialog.dart';
 
 class RegisterView extends StatefulWidget {
   const RegisterView({super.key});
@@ -73,80 +76,44 @@ class _RegisterViewState extends State<RegisterView> {
                     .createUserWithEmailAndPassword(
                         email: email, password: password);
                 devtools.log("User Created: ${userCredential.user?.email}");
-                Navigator.of(context).pushNamedAndRemoveUntil(
-                    notesRoute,
-                    // (route) => false means to remove everything and not to keep anything
-                    (_) => false);
+                final user = FirebaseAuth.instance.currentUser;
+                user?.sendEmailVerification();
+                Navigator.of(context).pushNamed(
+                  notesRoute,
+                  // (route) => false means to remove everything and not to keep anything
+                );
               } catch (e) {
                 if (e is FirebaseAuthException) {
                   if (e.code == "weak-password") {
                     devtools.log("Weak Password");
-                    // ignore: use_build_context_synchronously
-                    showDialog(
-                      context: context,
-                      builder: (context) {
-                        return AlertDialog(
-                          title: const Text("Error"),
-                          content: const Text(
-                              "Weak Password my nigga!\nWeak just like yo mama!\nAt least 6 characters, my nigga."),
-                          actions: [
-                            TextButton(
-                                onPressed: () {
-                                  Navigator.of(context).pop();
-                                },
-                                child: const Text("Try again!"))
-                          ],
-                        );
-                      },
+                    await showErrorDialog(
+                      context,
+                      "Weak Password my nigga!\nWeak just like yo mama!\nAt least 6 characters, my nigga.",
                     );
                   } else if (e.code == "email-already-in-use") {
                     devtools.log("Email already in use my nigga!");
-                    // ignore: use_build_context_synchronously
-                    showDialog(
-                      context: context,
-                      builder: (context) {
-                        return AlertDialog(
-                          title: const Text("Error"),
-                          content: const Text(
-                              "Why you trynna steal someone else's email.\nThis aint the hood.\nEnter an email that belongs to you, my nigga!"),
-                          actions: [
-                            TextButton(
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                              },
-                              child: const Text("Alright, master!"),
-                            )
-                          ],
-                        );
-                      },
+                    await showErrorDialog(
+                      context,
+                      "Why you trynna steal someone else's email.\nThis aint the hood.\nEnter an email that belongs to you, my nigga!",
                     );
                   } else if (e.code == "invalid-email") {
                     devtools.log("Invalid Email my nigga!");
-                    // ignore: use_build_context_synchronously
-                    showDialog(
-                      context: context,
-                      builder: (context) {
-                        return AlertDialog(
-                          title: const Text("Error"),
-                          content: const Text(
-                              "My niggaaaa! You stupid!\nAn email must have @something.com."),
-                          actions: [
-                            TextButton(
-                                onPressed: () {
-                                  Navigator.of(context).pop();
-                                },
-                                child: const Text("Forgive me master!"))
-                          ],
-                        );
-                      },
+                    await showErrorDialog(
+                      context,
+                      "My niggaaaa! You stupid!\nAn email must have @something.com.",
                     );
                   } else {
                     devtools.log('Firebase Authentication Error: ${e.code}');
                     devtools.log(
                         'Firebase Authentication Error Message: ${e.message}');
+                    await showErrorDialog(
+                      context,
+                      "Firebase Authentication Error: ${e.code}\nFirebase Authentication Error Message: ${e.message}",
+                    );
                   }
                 } else {
                   devtools.log('Error: $e');
+                  await showErrorDialog(context, "Error: $e");
                 }
               }
             },

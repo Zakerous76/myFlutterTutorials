@@ -1,8 +1,11 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer' as devtools show log;
 
 import 'package:myfirsttutorial/constants/routes.dart';
+import 'package:myfirsttutorial/utilities/show_error_dialog.dart';
 
 class LoginView extends StatefulWidget {
   //Here we converted the previous Stateless homepage to a stateful one
@@ -71,27 +74,36 @@ class _LoginViewState extends State<LoginView> {
                   email: email,
                   password: password,
                 );
-                // ignore: use_build_context_synchronously
-                Navigator.of(context).pushNamedAndRemoveUntil(
-                  notesRoute,
-                  (_) => false,
-                );
+                if (FirebaseAuth.instance.currentUser?.emailVerified ?? false) {
+                  Navigator.of(context).pushNamedAndRemoveUntil(
+                    notesRoute,
+                    (_) => false,
+                  );
+                } else {
+                  Navigator.of(context).pushNamedAndRemoveUntil(
+                    verifyEmailRoute,
+                    (_) => false,
+                  );
+                }
               } catch (e) {
                 if (e is FirebaseAuthException) {
                   if (e.code == "user-not-found") {
                     devtools.log("User not found");
+                    await showErrorDialog(context, "User not found");
                   } else if (e.code == "wrong-password") {
                     devtools.log("Wrong password");
+                    await showErrorDialog(context, "Wrong password");
                   } else {
-                    devtools.log(
-                      'Firebase Authentication Error: ${e.code}',
-                    );
-                    devtools.log(
-                      'Firebase Authentication Error Message: ${e.message}',
-                    );
+                    // devtools.log('Firebase Authentication Error: ${e.code}',);
+                    await showErrorDialog(
+                        context, "Firebase Authentication Error: ${e.code}");
+                    // devtools.log('Firebase Authentication Error Message: ${e.message}',);
+                    await showErrorDialog(context,
+                        "Firebase Authentication Error Message: ${e.message}");
                   }
                 } else {
-                  devtools.log('Error: $e');
+                  // devtools.log('Error: $e');
+                  await showErrorDialog(context, "Error: $e");
                 }
               }
             },

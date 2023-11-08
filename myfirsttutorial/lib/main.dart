@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:myfirsttutorial/constants/routes.dart';
 import 'package:myfirsttutorial/firebase_options.dart';
 import 'package:myfirsttutorial/views/login_view.dart';
+import 'package:myfirsttutorial/views/notes_view.dart';
 import 'package:myfirsttutorial/views/register_view.dart';
 import 'package:myfirsttutorial/views/verify_email_view.dart';
 
@@ -43,107 +44,37 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-        future: Firebase.initializeApp(
-            // if its not initialized, the instance of firebase may be null
-            options: DefaultFirebaseOptions.currentPlatform),
-        builder: (context, snapshot) {
-          switch (snapshot.connectionState) {
-            case ConnectionState.done:
-              final user = FirebaseAuth.instance.currentUser;
-              if (user != null) {
-                if (user.emailVerified) {
-                  // print("Email is verified");
-                  return const NotesView();
-                } else {
-                  return const VerifyEmailView();
-                }
+      future: Firebase.initializeApp(
+          // if its not initialized, the instance of firebase may be null
+          options: DefaultFirebaseOptions.currentPlatform),
+      builder: (context, snapshot) {
+        switch (snapshot.connectionState) {
+          case ConnectionState.done:
+            final user = FirebaseAuth.instance.currentUser;
+            if (user != null) {
+              if (user.emailVerified) {
+                // print("Email is verified");
+                return const NotesView();
               } else {
-                return const LoginView();
+                return const VerifyEmailView();
               }
-            // // "If the user is non-null, take it. If the user is null then take false"
-            // if (user?.emailVerified ?? false) {
-            //   return const Text("Done");
-            // } else {
-            //   print("You are NOT verified, you need to verify my nigga!");
-            //   // Navigator.of(context).push(MaterialPageRoute(          // Since we are returning a "Column" rather than a scaffold widget from the VerifyEmailView()
-            //   //     builder: (context) => const VerifyEmailView()));
-            // }
-            // return const Text("Done");
+            } else {
+              return const LoginView();
+            }
+          // // "If the user is non-null, take it. If the user is null then take false"
+          // if (user?.emailVerified ?? false) {
+          //   return const Text("Done");
+          // } else {
+          //   print("You are NOT verified, you need to verify my nigga!");
+          //   // Navigator.of(context).push(MaterialPageRoute(          // Since we are returning a "Column" rather than a scaffold widget from the VerifyEmailView()
+          //   //     builder: (context) => const VerifyEmailView()));
+          // }
+          // return const Text("Done");
 
-            default:
-              return const CircularProgressIndicator();
-          }
-        });
-  }
-}
-
-enum MenuAction { logout }
-
-class NotesView extends StatefulWidget {
-  const NotesView({super.key});
-
-  @override
-  State<NotesView> createState() => _NotesViewState();
-}
-
-class _NotesViewState extends State<NotesView> {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Main UI"),
-        actions: [
-          PopupMenuButton<MenuAction>(
-            onSelected: (value) async {
-              switch (value) {
-                case MenuAction.logout:
-                  final shouldLogout = await showLogOutDialog(context);
-                  if (shouldLogout) {
-                    await FirebaseAuth.instance.signOut();
-                    Navigator.of(context)
-                        .pushNamedAndRemoveUntil(loginRoute, (_) => false);
-                  }
-                  break;
-              }
-            },
-            itemBuilder: (context) {
-              return const [
-                PopupMenuItem<MenuAction>(
-                  value: MenuAction.logout, // value is what you see/get
-                  child: Text("Log Out"), // child is what the user sees
-                ),
-              ];
-            },
-          )
-        ],
-      ),
-      body: const Text("Hello World"),
+          default:
+            return const CircularProgressIndicator();
+        }
+      },
     );
   }
-}
-
-Future<bool> showLogOutDialog(BuildContext context) {
-  return showDialog(
-    context: context,
-    builder: (context) {
-      return AlertDialog(
-        title: const Text("Log Out"),
-        content: const Text("Are you sure want to log out?"),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop(false);
-            },
-            child: const Text("Cancel"),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop(true);
-            },
-            child: const Text("Log out"),
-          )
-        ],
-      );
-    },
-  ).then((value) => value ?? false);
 }
