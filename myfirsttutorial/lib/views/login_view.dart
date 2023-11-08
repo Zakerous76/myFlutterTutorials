@@ -6,6 +6,7 @@ import 'dart:developer' as devtools show log;
 
 import 'package:myfirsttutorial/constants/routes.dart';
 import 'package:myfirsttutorial/utilities/show_error_dialog.dart';
+import 'package:myfirsttutorial/views/verify_email_view.dart';
 
 class LoginView extends StatefulWidget {
   //Here we converted the previous Stateless homepage to a stateful one
@@ -74,10 +75,20 @@ class _LoginViewState extends State<LoginView> {
                   email: email,
                   password: password,
                 );
-                Navigator.of(context).pushNamedAndRemoveUntil(
-                  notesRoute,
-                  (_) => false,
-                );
+                final user = FirebaseAuth.instance.currentUser;
+                if (user?.emailVerified ?? false) {
+                  // user's email is verified
+                  Navigator.of(context).pushNamedAndRemoveUntil(
+                    notesRoute,
+                    (_) => false,
+                  );
+                } else {
+                  // user's email is not verified
+                  Navigator.of(context).pushNamedAndRemoveUntil(
+                    verifyEmailRoute,
+                    (_) => false,
+                  );
+                }
               } catch (e) {
                 if (e is FirebaseAuthException) {
                   if (e.code == "user-not-found") {
