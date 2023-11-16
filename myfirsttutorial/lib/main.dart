@@ -3,11 +3,9 @@
 // ignore: unused_import
 import 'dart:developer' as devtools show log;
 
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:myfirsttutorial/constants/routes.dart';
-import 'package:myfirsttutorial/firebase_options.dart';
+import 'package:myfirsttutorial/services/auth/auth_service.dart';
 import 'package:myfirsttutorial/views/login_view.dart';
 import 'package:myfirsttutorial/views/notes_view.dart';
 import 'package:myfirsttutorial/views/register_view.dart';
@@ -16,9 +14,7 @@ import 'package:myfirsttutorial/views/verify_email_view.dart';
 void main() async {
   WidgetsFlutterBinding
       .ensureInitialized(); // Ensure that Flutter is initialized
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await AuthService.firebase().initialize();
 
   runApp(MaterialApp(
     // we are straight up returning the Material from here rather than returning a separate MyApp instance becasue this yields more performance
@@ -45,15 +41,13 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-        future: Firebase.initializeApp(
-            // if its not initialized, the instance of firebase may be null
-            options: DefaultFirebaseOptions.currentPlatform),
+        future: AuthService.firebase().initialize(),
         builder: (context, snapshot) {
           switch (snapshot.connectionState) {
             case ConnectionState.done:
-              final user = FirebaseAuth.instance.currentUser;
+              final user = AuthService.firebase().currentUser;
               if (user != null) {
-                if (user.emailVerified) {
+                if (user.isEmailVerified) {
                   return const NotesView();
                 } else {
                   return const VerifyEmailView();

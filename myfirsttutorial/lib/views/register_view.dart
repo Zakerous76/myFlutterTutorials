@@ -1,10 +1,11 @@
 // ignore_for_file: use_build_context_synchronously
 
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer' as devtools show log;
 
 import 'package:myfirsttutorial/constants/routes.dart';
+import 'package:myfirsttutorial/services/auth/auth_exceptions.dart';
+import 'package:myfirsttutorial/services/auth/auth_service.dart';
 import 'package:myfirsttutorial/utilities/show_error_dialog.dart';
 
 class RegisterView extends StatefulWidget {
@@ -73,47 +74,37 @@ class _RegisterViewState extends State<RegisterView> {
               final password = _password.text;
               try {
                 // final userCredential =
-                await FirebaseAuth.instance.createUserWithEmailAndPassword(
+                await AuthService.firebase().createUser(
                   email: email,
                   password: password,
                 );
                 // devtools.log("User Created: ${userCredential.user?.email}");
 
-                final user = FirebaseAuth.instance.currentUser;
-                await user?.sendEmailVerification();
+                AuthService.firebase().sendEmailVerification();
                 Navigator.of(context).pushNamed(
                   verifyEmailRoute,
                   // (route) => false means to remove everything and not to keep anything
                 );
-              } catch (e) {
-                if (e is FirebaseAuthException) {
-                  if (e.code == "weak-password") {
-                    await showErrorDialog(
-                      context,
-                      "Weak Password my nigga!\nWeak just like yo mama!\nAt least 6 characters, my nigga.",
-                    );
-                  } else if (e.code == "email-already-in-use") {
-                    showErrorDialog(
-                      context,
-                      "Why you trynna steal someone else's email.\nThis aint the hood.\nEnter an email that belongs to you, my nigga!",
-                    );
-                  } else if (e.code == "invalid-email") {
-                    showErrorDialog(
-                      context,
-                      "My niggaaaa! You stupid!\nAn email must have @something.com.",
-                    );
-                  } else {
-                    showErrorDialog(
-                      context,
-                      'Firebase Authentication Error: ${e.code}\nFirebase Authentication Error Message: ${e.message}',
-                    );
-                  }
-                } else {
-                  showErrorDialog(
-                    context,
-                    'Error: $e',
-                  );
-                }
+              } on WeakPasswordAuthException {
+                await showErrorDialog(
+                  context,
+                  "Weak Password my nigga!\nWeak just like yo mama!\nAt least 6 characters, my nigga.",
+                );
+              } on EmailAlreadyInUseAuthException {
+                showErrorDialog(
+                  context,
+                  "Why you trynna steal someone else's email.\nThis aint the hood.\nEnter an email that belongs to you, my nigga!",
+                );
+              } on InvalidEmailAuthException {
+                showErrorDialog(
+                  context,
+                  "My niggaaaa! You stupid!\nAn email must have @something.com.",
+                );
+              } on GenericAuthException {
+                showErrorDialog(
+                  context,
+                  'Authentication Error',
+                );
               }
             },
             child: const Text("Register"),
