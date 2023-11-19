@@ -1,5 +1,5 @@
 // ignore_for_file: use_build_context_synchronously
-import 'dart:developer' as devtools show log;
+// import 'dart:developer' as devtools show log;
 import 'package:flutter/material.dart';
 import 'package:myfirsttutorial/constants/routes.dart';
 import 'package:myfirsttutorial/services/auth/auth_exceptions.dart';
@@ -65,7 +65,7 @@ class _LoginViewState extends State<LoginView> {
           ),
           TextButton(
             onPressed: () async {
-              devtools.log("Button Pressed");
+              // devtools.log("Button Pressed");
               final email = _email.text;
               final password = _password.text;
               try {
@@ -121,7 +121,8 @@ class _LoginViewState extends State<LoginView> {
     // return Scaffold(
     //   appBar: AppBar(title: const Text("Login")),
 
-    //   // The body of the scaffold is wrapped inside a FutureBuilder widget because we want to build the widget based on the information we get from the future
+    //   // The body of the scaffold is wrapped inside a FutureBuilder widget because we want to build
+    //   //   the widget based on the information we get from the future
     //   // Creates a widget that builds itself based on the latest snapshot of interaction with a [Future].
     //   body: FutureBuilder(
     //     // The future that it awaits is this:
