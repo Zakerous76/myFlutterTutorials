@@ -11,18 +11,9 @@ class NotesService {
   Database? _db;
   // A NoteTable cache
   List<DatabaseNote> _notes = [];
-
-  // (A hacky way of) Creating a Singleton for NotesService
-  static final NotesService _shared = NotesService._sharedInstance();
-  // Private initializer/constructer of this class
-  NotesService._sharedInstance();
-  factory NotesService() => _shared;
-
   // UI's interface to _notes. It would read it from the following controller.
   final _notesStreamController = // in normal development, you can only listen to stream once but here .broadcast fixes that by allowing you to listen more than once
       StreamController<List<DatabaseNote>>.broadcast();
-
-  Stream<List<DatabaseNote>> get allNotes => _notesStreamController.stream;
 
   Future<void> _cacheNotes() async {
     final allNotes = await getAllNotes();
@@ -37,15 +28,6 @@ class NotesService {
       throw DatabaseIsNotOpenException();
     } else {
       return db;
-    }
-  }
-
-  // Ensure DB is open
-  Future<void> _ensureDbIsOpen() async {
-    try {
-      await open();
-    } on DatabaseAlreadyOpenException {
-      // empty
     }
   }
 
@@ -86,9 +68,8 @@ class NotesService {
   }
 
   Future<DatabaseUser> createUser({required String email}) async {
-    await _ensureDbIsOpen();
-
     final db = _getDatabaseOrThrow();
+
     // first check a user already exists with the same email
     // In case if there was constraint on emails being unique, this would
     // prevent getting an error from sqlite
@@ -115,7 +96,6 @@ class NotesService {
   }
 
   Future<void> deleteUser({required String email}) async {
-    await _ensureDbIsOpen();
     final db = _getDatabaseOrThrow();
 
     // from the userTable all rows corresponding to the email will be deleted.
@@ -131,7 +111,6 @@ class NotesService {
   }
 
   Future<DatabaseUser> getUser({required String email}) async {
-    await _ensureDbIsOpen();
     final db = _getDatabaseOrThrow();
 
     final results = await db.query(
@@ -162,7 +141,6 @@ class NotesService {
 
   // Returns a note with its owner
   Future<DatabaseNote> createNote({required DatabaseUser owner}) async {
-    await _ensureDbIsOpen();
     final db = _getDatabaseOrThrow();
 
     // first make sure that the owner user exists in the database
@@ -193,7 +171,6 @@ class NotesService {
   }
 
   Future<void> deleteNote({required int id}) async {
-    await _ensureDbIsOpen();
     final db = _getDatabaseOrThrow();
     final deletedCount = await db.delete(
       noteTable,
@@ -213,7 +190,6 @@ class NotesService {
   }
 
   Future<int> deleteAllNotes() async {
-    await _ensureDbIsOpen();
     final db = _getDatabaseOrThrow();
     final numberOfDeletions = await db.delete(noteTable);
     _notes = [];
@@ -223,7 +199,6 @@ class NotesService {
 
   // returns a specific note
   Future<DatabaseNote> getNote({required int id}) async {
-    await _ensureDbIsOpen();
     final db = _getDatabaseOrThrow();
     final notes = await db.query(
       noteTable,
@@ -244,7 +219,6 @@ class NotesService {
   }
 
   Future<Iterable<DatabaseNote>> getAllNotes() async {
-    await _ensureDbIsOpen();
     final db = _getDatabaseOrThrow();
     final notes = await db.query(
       noteTable,
@@ -263,7 +237,6 @@ class NotesService {
     required DatabaseNote note,
     required String text,
   }) async {
-    await _ensureDbIsOpen();
     final db = _getDatabaseOrThrow();
 
     // make sure the note already exists in the database
@@ -360,7 +333,7 @@ const createUserTable = '''CREATE TABLE IF NOT EXISTS "user" (
         PRIMARY KEY("id" AUTOINCREMENT)
       );''';
 
-const createNoteTable = '''CREATE TABLE IF NOT EXISTS "note" (
+const createNoteTable = '''CREATE TABLE IF NOT EXOSTS "note" (
         "id"	INTEGER NOT NULL,
         "user_id"	INTEGER NOT NULL,
         "text"	TEXT,

@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:myfirsttutorial/constants/routes.dart';
 import 'package:myfirsttutorial/enums/menu_action.dart';
 import 'package:myfirsttutorial/services/auth/auth_service.dart';
-import 'package:myfirsttutorial/services/crud/notes_service.dart';
 
 class NotesView extends StatefulWidget {
   const NotesView({super.key});
@@ -14,81 +13,38 @@ class NotesView extends StatefulWidget {
 }
 
 class _NotesViewState extends State<NotesView> {
-  late final NotesService _notesService;
-
-  // The (!) tells flutter to forcefully unwrap it. As we are sure that the (.currentUser) can not be null, we use (!) to tell flutter that.
-  String get userEmail => AuthService.firebase().currentUser!.email!;
-
-  // opening and closing the DataBase
-  @override
-  void initState() {
-    _notesService = NotesService();
-    // No need for the following as we have a method to ensure the DB is open (_ensureDbIsOpen())
-    // _notesService.open();
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    _notesService.close();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: const Text("Main UI - Notes View"),
-          actions: [
-            PopupMenuButton<MenuAction>(
-              onSelected: (value) async {
-                switch (value) {
-                  case MenuAction.logout:
-                    final shouldLogout = await showLogOutDialog(context);
-                    if (shouldLogout) {
-                      await AuthService.firebase().logOut();
-                      Navigator.of(context)
-                          .pushNamedAndRemoveUntil(loginRoute, (_) => false);
-                    }
-                    break;
-                }
-              },
-              itemBuilder: (context) {
-                return const [
-                  PopupMenuItem<MenuAction>(
-                    value: MenuAction.logout, // value is what you see/get
-                    child: Text("Log Out"), // child is what the user sees
-                  ),
-                ];
-              },
-            )
-          ],
-        ),
-        body: FutureBuilder(
-          future: _notesService.getOrCreateUser(email: userEmail),
-          builder: (context, snapshot) {
-            // this is the FutureBuilder's connection state
-            switch (snapshot.connectionState) {
-              case ConnectionState.done:
-                // the widget returned by this FutureBuilder is a StreamBuilder
-                return StreamBuilder(
-                  stream: _notesService.allNotes,
-                  builder: (context, snapshot) {
-                    // this is the Stream Builder's connection state
-                    switch (snapshot.connectionState) {
-                      case ConnectionState.waiting:
-                        return const Text("Waiting for all notes...");
-                      default:
-                        return const CircularProgressIndicator();
-                    }
-                  },
-                );
-
-              default:
-                return const CircularProgressIndicator();
-            }
-          },
-        ));
+      appBar: AppBar(
+        title: const Text("Main UI - Notes View"),
+        actions: [
+          PopupMenuButton<MenuAction>(
+            onSelected: (value) async {
+              switch (value) {
+                case MenuAction.logout:
+                  final shouldLogout = await showLogOutDialog(context);
+                  if (shouldLogout) {
+                    await AuthService.firebase().logOut();
+                    Navigator.of(context)
+                        .pushNamedAndRemoveUntil(loginRoute, (_) => false);
+                  }
+                  break;
+              }
+            },
+            itemBuilder: (context) {
+              return const [
+                PopupMenuItem<MenuAction>(
+                  value: MenuAction.logout, // value is what you see/get
+                  child: Text("Log Out"), // child is what the user sees
+                ),
+              ];
+            },
+          )
+        ],
+      ),
+      body: const Text("Hello World"),
+    );
   }
 }
 
