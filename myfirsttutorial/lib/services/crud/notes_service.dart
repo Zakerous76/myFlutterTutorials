@@ -1,4 +1,4 @@
-import 'dart:js_interop_unsafe';
+import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:myfirsttutorial/services/crud/crud_exceptions.dart';
@@ -9,6 +9,17 @@ import 'package:path/path.dart' show join;
 
 class NotesService {
   Database? _db;
+  // A NoteTable cache
+  List<DatabaseNote> _notes = [];
+  // UI's interface to _notes. It would read it from the following controller.
+  final _notesStreamController = // in normal development, you can only listen to stream once but here .broadcast fixes that by allowing you to listen more than once
+      StreamController<List<DatabaseNote>>.broadcast();
+
+  Future<void> _cacheNotes() async {
+    final allNotes = await getAllNotes();
+    _notes = allNotes.toList();
+    _notesStreamController.add(_notes);
+  }
 
   // A getter for the database. If the database is open, it will return it. If not, then it will throw an exception.
   Database _getDatabaseOrThrow() {
@@ -36,6 +47,8 @@ class NotesService {
       await db.execute(createUserTable);
       // create note table if not exists
       await db.execute(createNoteTable);
+      // caching the notes
+      await _cacheNotes();
     } on MissingPlatformDirectoryException {
       throw UnableToGetDocumentDirectoryException();
     } catch (e) {
@@ -113,6 +126,19 @@ class NotesService {
     }
   }
 
+  // A function to give the notes_view.dart the ability to associate a Firebase user with a Database User
+  Future<DatabaseUser> getOrCreateUser({required String email}) async {
+    try {
+      final user = await getUser(email: email);
+      return user;
+    } on CouldNotFindUserException {
+      final createdUser = await createUser(email: email);
+      return createdUser;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   // Returns a note with its owner
   Future<DatabaseNote> createNote({required DatabaseUser owner}) async {
     final db = _getDatabaseOrThrow();
@@ -138,7 +164,9 @@ class NotesService {
       text: text,
       isSyncedWithCloud: true,
     );
-
+    _notes.add(note);
+    // update the StreamController with _notes as it (_notes) is "the source of truth"
+    _notesStreamController.add(_notes);
     return note;
   }
 
@@ -151,12 +179,22 @@ class NotesService {
     );
     if (deletedCount == 0) {
       throw CouldNotDeleteNoteException();
+    } else {
+      final countBefore = _notes.length;
+      _notes.removeWhere((note) => note.id == id);
+      // the _notesStreamController will be updated if only the note could be cleared from the cache (_notes).
+      if (countBefore != _notes.length) {
+        _notesStreamController.add(_notes);
+      }
     }
   }
 
   Future<int> deleteAllNotes() async {
     final db = _getDatabaseOrThrow();
-    return await db.delete(noteTable);
+    final numberOfDeletions = await db.delete(noteTable);
+    _notes = [];
+    _notesStreamController.add(_notes);
+    return numberOfDeletions;
   }
 
   // returns a specific note
@@ -171,7 +209,12 @@ class NotesService {
     if (notes.isEmpty) {
       throw CouldNotFindNoteException();
     } else {
-      return DatabaseNote.fromRow(notes.first);
+      final note = DatabaseNote.fromRow(notes.first);
+      // updating the cache before returning the note from the database
+      _notes.removeWhere((note) => note.id == id);
+      _notes.add(note);
+      _notesStreamController.add(_notes);
+      return note;
     }
   }
 
@@ -207,7 +250,11 @@ class NotesService {
     if (updatedRowsCount == 0) {
       throw CouldNoteUpdateNoteException();
     } else {
-      return await getNote(id: note.id);
+      final updatedNote = await getNote(id: note.id);
+      _notes.removeWhere((note) => note.id == updatedNote.id);
+      _notes.add(updatedNote);
+      _notesStreamController.add(_notes);
+      return updatedNote;
     }
   }
 }
