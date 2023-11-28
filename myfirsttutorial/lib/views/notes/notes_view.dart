@@ -5,6 +5,7 @@ import 'package:myfirsttutorial/constants/routes.dart';
 import 'package:myfirsttutorial/enums/menu_action.dart';
 import 'package:myfirsttutorial/services/auth/auth_service.dart';
 import 'package:myfirsttutorial/services/crud/notes_service.dart';
+import 'package:myfirsttutorial/views/notes/new_notes_view.dart';
 
 class NotesView extends StatefulWidget {
   const NotesView({super.key});
@@ -40,6 +41,12 @@ class _NotesViewState extends State<NotesView> {
         appBar: AppBar(
           title: const Text("Main UI - Notes View"),
           actions: [
+            IconButton(
+              onPressed: () {
+                Navigator.of(context).pushNamed(newNoteRoute);
+              },
+              icon: const Icon(Icons.add),
+            ),
             PopupMenuButton<MenuAction>(
               onSelected: (value) async {
                 switch (value) {
