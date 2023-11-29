@@ -5,6 +5,7 @@ import 'package:myfirsttutorial/constants/routes.dart';
 import 'package:myfirsttutorial/enums/menu_action.dart';
 import 'package:myfirsttutorial/services/auth/auth_service.dart';
 import 'package:myfirsttutorial/services/crud/notes_service.dart';
+import 'package:sqflite/sqflite.dart';
 
 class NotesView extends StatefulWidget {
   const NotesView({super.key});
@@ -28,11 +29,12 @@ class _NotesViewState extends State<NotesView> {
     super.initState();
   }
 
-  @override
-  void dispose() {
-    _notesService.close();
-    super.dispose();
-  }
+  // We don't want to close DB everytime we hot reload.
+  // @override
+  // void dispose() {
+  //   _notesService.close();
+  //   super.dispose();
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -87,7 +89,27 @@ class _NotesViewState extends State<NotesView> {
                       // as soon as there is an element the state changes to .active
                       case ConnectionState.active:
                         // two consecutive cases = Implicit Fall through; when a case doesn't have any logic
-                        return const Text("Waiting for all notes...");
+                        if (snapshot.hasData) {
+                          final allNotes = snapshot.data as List<DatabaseNote>;
+                          // print(allNotes);
+                          // return const Text("Got All the notes");
+                          return ListView.builder(
+                            itemCount: allNotes.length,
+                            itemBuilder: (context, index) {
+                              final note = allNotes[index];
+                              return ListTile(
+                                title: Text(
+                                  note.text,
+                                  maxLines: 1,
+                                  softWrap: true,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              );
+                            },
+                          );
+                        } else {
+                          return const CircularProgressIndicator();
+                        }
 
                       default:
                         return const CircularProgressIndicator();

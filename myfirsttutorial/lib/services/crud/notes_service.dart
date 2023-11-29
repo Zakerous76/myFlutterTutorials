@@ -15,12 +15,18 @@ class NotesService {
   // (A hacky way of) Creating a Singleton for NotesService
   static final NotesService _shared = NotesService._sharedInstance();
   // Private initializer/constructer of this class
-  NotesService._sharedInstance();
+  NotesService._sharedInstance() {
+    _notesStreamController = StreamController<List<DatabaseNote>>.broadcast(
+      onListen: () {
+        _notesStreamController.sink.add(_notes);
+      },
+    );
+  }
   factory NotesService() => _shared;
 
   // UI's interface to _notes. It would read it from the following controller.
-  final _notesStreamController = // in normal development, you can only listen to stream once but here .broadcast fixes that by allowing you to listen more than once
-      StreamController<List<DatabaseNote>>.broadcast();
+  // in normal development, you can only listen to stream once but here .broadcast fixes that by allowing you to listen more than once
+  late final StreamController<List<DatabaseNote>> _notesStreamController;
 
   Stream<List<DatabaseNote>> get allNotes => _notesStreamController.stream;
 
@@ -59,7 +65,8 @@ class NotesService {
       final docsPath = await getApplicationDocumentsDirectory();
       final dbPath = join(docsPath.path, dbName);
       final db = await openDatabase(
-          dbPath); // openDatabase can create the database if it is not created
+        dbPath,
+      ); // openDatabase can create the database if it is not created
       _db = db;
       // create user table if not exists
       await db.execute(createUserTable);
@@ -353,7 +360,7 @@ const idColumn = "id";
 const userIdColumn = "user_id";
 const emailColumn = "email";
 const textColumn = "text";
-const isSyncedWithCloudColumn = "is_synced_with_column";
+const isSyncedWithCloudColumn = "is_synced_with_cloud";
 const createUserTable = '''CREATE TABLE IF NOT EXISTS "user" (
         "id"	INTEGER NOT NULL,
         "email"	TEXT NOT NULL UNIQUE,
