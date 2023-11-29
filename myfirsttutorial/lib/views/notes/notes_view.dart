@@ -5,7 +5,6 @@ import 'package:myfirsttutorial/constants/routes.dart';
 import 'package:myfirsttutorial/enums/menu_action.dart';
 import 'package:myfirsttutorial/services/auth/auth_service.dart';
 import 'package:myfirsttutorial/services/crud/notes_service.dart';
-import 'package:myfirsttutorial/views/notes/new_notes_view.dart';
 
 class NotesView extends StatefulWidget {
   const NotesView({super.key});
@@ -84,7 +83,12 @@ class _NotesViewState extends State<NotesView> {
                     // this is the Stream Builder's connection state
                     switch (snapshot.connectionState) {
                       case ConnectionState.waiting:
+                      // Since there is nothing in the stream, the state is .waiting
+                      // as soon as there is an element the state changes to .active
+                      case ConnectionState.active:
+                        // two consecutive cases = Implicit Fall through; when a case doesn't have any logic
                         return const Text("Waiting for all notes...");
+
                       default:
                         return const CircularProgressIndicator();
                     }
