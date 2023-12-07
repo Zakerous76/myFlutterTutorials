@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:myfirsttutorial/extensions/list/filter.dart';
 import 'package:myfirsttutorial/services/crud/crud_exceptions.dart';
 import 'package:sqflite/sqflite.dart'; // sqlite is being managed by sqflite
 import 'package:path_provider/path_provider.dart'
@@ -12,6 +13,9 @@ class NotesService {
 
   // A NoteTable cache
   List<DatabaseNote> _notes = [];
+
+  // current user, to get only its notes and not everyones
+  late DatabaseUser _user;
 
   // (A hacky way of) Creating a Singleton for NotesService
   static final NotesService _shared = NotesService._sharedInstance();
@@ -29,7 +33,16 @@ class NotesService {
   // in normal development, you can only listen to stream once but here .broadcast fixes that by allowing you to listen more than once
   late final StreamController<List<DatabaseNote>> _notesStreamController;
 
-  Stream<List<DatabaseNote>> get allNotes => _notesStreamController.stream;
+  Stream<List<DatabaseNote>> get allNotes =>
+      _notesStreamController.stream.filter((note) {
+        final currentUser = _user;
+        if (currentUser != null) {
+          // we are not returning any notes, just the a predicate
+          return note.userId == currentUser.id;
+        } else {
+          throw UserShouldBeSetBeforeReadingAllNotesException();
+        }
+      });
 
   Future<void> _cacheNotes() async {
     final allNotes = await getAllNotes();
@@ -156,12 +169,23 @@ class NotesService {
   }
 
   // A function to give the notes_view.dart the ability to associate a Firebase user with a Database User
-  Future<DatabaseUser> getOrCreateUser({required String email}) async {
+  Future<DatabaseUser> getOrCreateUser({
+    required String email,
+    bool setAsCurrentUser = true,
+  }) async {
     try {
       final user = await getUser(email: email);
+      // setting the _currentUser
+      if (setAsCurrentUser) {
+        _user = user;
+      }
       return user;
     } on CouldNotFindUserException {
       final createdUser = await createUser(email: email);
+      // setting the _currentUser
+      if (setAsCurrentUser) {
+        _user = createdUser;
+      }
       return createdUser;
     } catch (e) {
       rethrow;
@@ -185,7 +209,7 @@ class NotesService {
     final notesId = await db.insert(noteTable, {
       userIdColumn: owner.id,
       textColumn: text,
-      isSyncedWithCloudColumn: true,
+      isSyncedWithCloudColumn: 1,
     });
 
     final note = DatabaseNote(
@@ -277,10 +301,18 @@ class NotesService {
     // make sure the note already exists in the database
     await getNote(id: note.id);
 
-    final updatedRowsCount = await db.update(noteTable, {
-      textColumn: text,
-      isSyncedWithCloudColumn: 0,
-    });
+    final updatedRowsCount = await db.update(
+      noteTable,
+      {
+        textColumn: text,
+        isSyncedWithCloudColumn: 0,
+      },
+      // before this, when updateNote method was called, sqlite was going thru
+      // all of the rows inside the database and updating everything. With this
+      // modification, now it will only update the right note using its note.id
+      where: "id = ?",
+      whereArgs: [note.id],
+    );
 
     if (updatedRowsCount == 0) {
       throw CouldNoteUpdateNoteException();
