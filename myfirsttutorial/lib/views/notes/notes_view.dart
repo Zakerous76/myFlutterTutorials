@@ -45,7 +45,7 @@ class _NotesViewState extends State<NotesView> {
           actions: [
             IconButton(
               onPressed: () {
-                Navigator.of(context).pushNamed(newNoteRoute);
+                Navigator.of(context).pushNamed(createOrUpdateNoteRoute);
               },
               icon: const Icon(Icons.add),
             ),
@@ -56,8 +56,10 @@ class _NotesViewState extends State<NotesView> {
                     final shouldLogout = await showLogOutDialog(context);
                     if (shouldLogout) {
                       await AuthService.firebase().logOut();
-                      Navigator.of(context)
-                          .pushNamedAndRemoveUntil(loginRoute, (_) => false);
+                      Navigator.of(context).pushNamedAndRemoveUntil(
+                        loginRoute,
+                        (_) => false,
+                      );
                     }
                     break;
                 }
@@ -95,10 +97,17 @@ class _NotesViewState extends State<NotesView> {
                           // print(allNotes);
                           // return const Text("Got All the notes");
                           return NotesListView(
-                              notes: allNotes,
-                              onDeleteNote: (note) async {
-                                await _notesService.deleteNote(id: note.id);
-                              });
+                            notes: allNotes,
+                            onDeleteNote: (note) async {
+                              await _notesService.deleteNote(id: note.id);
+                            },
+                            onTap: (DatabaseNote note) {
+                              Navigator.of(context).pushNamed(
+                                createOrUpdateNoteRoute,
+                                arguments: note,
+                              );
+                            },
+                          );
                         } else {
                           return const CircularProgressIndicator();
                         }

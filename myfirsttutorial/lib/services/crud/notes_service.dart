@@ -9,6 +9,7 @@ import 'package:path/path.dart' show join;
 
 class NotesService {
   Database? _db;
+
   // A NoteTable cache
   List<DatabaseNote> _notes = [];
 
@@ -184,7 +185,7 @@ class NotesService {
     final notesId = await db.insert(noteTable, {
       userIdColumn: owner.id,
       textColumn: text,
-      isSyncedWithCloudColumn: 1,
+      isSyncedWithCloudColumn: true,
     });
 
     final note = DatabaseNote(
