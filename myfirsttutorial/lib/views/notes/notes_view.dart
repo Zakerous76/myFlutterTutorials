@@ -6,7 +6,6 @@ import 'package:myfirsttutorial/enums/menu_action.dart';
 import 'package:myfirsttutorial/services/auth/auth_service.dart';
 import 'package:myfirsttutorial/services/cloud_crud/cloud_note.dart';
 import 'package:myfirsttutorial/services/cloud_crud/firebase_cloud_storage.dart';
-import 'package:myfirsttutorial/services/local_crud/notes_service.dart';
 import 'package:myfirsttutorial/utilities/dialogs/logout_dialog.dart';
 import 'package:myfirsttutorial/views/notes/notes_list_view.dart';
 
