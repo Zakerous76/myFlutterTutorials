@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:myfirsttutorial/services/auth/auth_service.dart';
-import 'package:myfirsttutorial/services/crud/notes_service.dart';
+import 'package:myfirsttutorial/services/local_crud/notes_service.dart';
 import 'package:myfirsttutorial/utilities/generics/get_arguments.dart';
 
 class CreateUpdateNoteView extends StatefulWidget {
@@ -11,7 +11,7 @@ class CreateUpdateNoteView extends StatefulWidget {
 }
 
 class _CreateUpdateNoteViewState extends State<CreateUpdateNoteView> {
-  DatabaseNote? _note;
+  LocalDatabaseNote? _note;
   late final NotesService _notesService;
   late final TextEditingController _textController;
 
@@ -41,9 +41,10 @@ class _CreateUpdateNoteViewState extends State<CreateUpdateNoteView> {
     _textController.addListener(_textControllerListener);
   }
 
-  Future<DatabaseNote> createOrGetExistingNote(BuildContext context) async {
+  Future<LocalDatabaseNote> createOrGetExistingNote(
+      BuildContext context) async {
     // in here between <>, we told the function the return type.
-    final widgetNote = context.getArgument<DatabaseNote>();
+    final widgetNote = context.getArgument<LocalDatabaseNote>();
     // if we could extract a note, we just have return that note and give the
     // user the ability to modify/update it.
     // it is done by setting the _textcontroller's text as such.
@@ -60,7 +61,7 @@ class _CreateUpdateNoteViewState extends State<CreateUpdateNoteView> {
       // we explicitly unwrap the .currentUser . This might crash the app but
       // we can not end up in this view without a user. So crashing would be good.
       final currentuser = AuthService.firebase().currentUser!;
-      final email = currentuser.email!;
+      final email = currentuser.email;
       final owner = await _notesService.getUser(email: email);
       final newNote = await _notesService.createNote(owner: owner);
       _note = newNote;

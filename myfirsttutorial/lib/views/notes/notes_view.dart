@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:myfirsttutorial/constants/routes.dart';
 import 'package:myfirsttutorial/enums/menu_action.dart';
 import 'package:myfirsttutorial/services/auth/auth_service.dart';
-import 'package:myfirsttutorial/services/crud/notes_service.dart';
+import 'package:myfirsttutorial/services/local_crud/notes_service.dart';
 import 'package:myfirsttutorial/utilities/dialogs/logout_dialog.dart';
 import 'package:myfirsttutorial/views/notes/notes_list_view.dart';
 
@@ -19,7 +19,7 @@ class _NotesViewState extends State<NotesView> {
   late final NotesService _notesService;
 
   // The (!) tells flutter to forcefully unwrap it. As we are sure that the (.currentUser) can not be null, we use (!) to tell flutter that.
-  String get userEmail => AuthService.firebase().currentUser!.email!;
+  String get userEmail => AuthService.firebase().currentUser!.email;
 
   // opening and closing the DataBase
   @override
@@ -93,7 +93,8 @@ class _NotesViewState extends State<NotesView> {
                       case ConnectionState.active:
                         // two consecutive cases = Implicit Fall through; when a case doesn't have any logic
                         if (snapshot.hasData) {
-                          final allNotes = snapshot.data as List<DatabaseNote>;
+                          final allNotes =
+                              snapshot.data as List<LocalDatabaseNote>;
                           // print(allNotes);
                           // return const Text("Got All the notes");
                           return NotesListView(
@@ -101,7 +102,7 @@ class _NotesViewState extends State<NotesView> {
                             onDeleteNote: (note) async {
                               await _notesService.deleteNote(id: note.id);
                             },
-                            onTap: (DatabaseNote note) {
+                            onTap: (LocalDatabaseNote note) {
                               Navigator.of(context).pushNamed(
                                 createOrUpdateNoteRoute,
                                 arguments: note,

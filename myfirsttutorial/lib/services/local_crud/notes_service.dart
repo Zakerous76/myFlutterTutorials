@@ -1,8 +1,10 @@
-import 'dart:async';
+// SQLite CRUD services
 
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:myfirsttutorial/extensions/list/filter.dart';
-import 'package:myfirsttutorial/services/crud/crud_exceptions.dart';
+import 'package:myfirsttutorial/services/local_crud/crud_exceptions.dart';
+import 'package:myfirsttutorial/services/local_crud/notes_services_constants.dart';
 import 'package:sqflite/sqflite.dart'; // sqlite is being managed by sqflite
 import 'package:path_provider/path_provider.dart'
     show MissingPlatformDirectoryException, getApplicationDocumentsDirectory;
@@ -12,16 +14,17 @@ class NotesService {
   Database? _db;
 
   // A NoteTable cache
-  List<DatabaseNote> _notes = [];
+  List<LocalDatabaseNote> _notes = [];
 
   // current user, to get only its notes and not everyones
-  late DatabaseUser _user;
+  late LocalDatabaseUser _user;
 
   // (A hacky way of) Creating a Singleton for NotesService
   static final NotesService _shared = NotesService._sharedInstance();
   // Private initializer/constructer of this class
   NotesService._sharedInstance() {
-    _notesStreamController = StreamController<List<DatabaseNote>>.broadcast(
+    _notesStreamController =
+        StreamController<List<LocalDatabaseNote>>.broadcast(
       onListen: () {
         _notesStreamController.sink.add(_notes);
       },
@@ -31,17 +34,13 @@ class NotesService {
 
   // UI's interface to _notes. It would read it from the following controller.
   // in normal development, you can only listen to stream once but here .broadcast fixes that by allowing you to listen more than once
-  late final StreamController<List<DatabaseNote>> _notesStreamController;
+  late final StreamController<List<LocalDatabaseNote>> _notesStreamController;
 
-  Stream<List<DatabaseNote>> get allNotes =>
+  Stream<List<LocalDatabaseNote>> get allNotes =>
       _notesStreamController.stream.filter((note) {
         final currentUser = _user;
-        if (currentUser != null) {
-          // we are not returning any notes, just the a predicate
-          return note.userId == currentUser.id;
-        } else {
-          throw UserShouldBeSetBeforeReadingAllNotesException();
-        }
+        // we are not returning any notes, just the a predicate
+        return note.userId == currentUser.id;
       });
 
   Future<void> _cacheNotes() async {
@@ -106,7 +105,7 @@ class NotesService {
     }
   }
 
-  Future<DatabaseUser> createUser({required String email}) async {
+  Future<LocalDatabaseUser> createUser({required String email}) async {
     await _ensureDbIsOpen();
 
     final db = _getDatabaseOrThrow();
@@ -129,7 +128,7 @@ class NotesService {
       emailColumn: email.toLowerCase(),
     });
 
-    return DatabaseUser(
+    return LocalDatabaseUser(
       id: userId,
       email: email,
     );
@@ -151,7 +150,7 @@ class NotesService {
     }
   }
 
-  Future<DatabaseUser> getUser({required String email}) async {
+  Future<LocalDatabaseUser> getUser({required String email}) async {
     await _ensureDbIsOpen();
     final db = _getDatabaseOrThrow();
 
@@ -164,12 +163,12 @@ class NotesService {
     if (results.isEmpty) {
       throw CouldNotFindUserException();
     } else {
-      return DatabaseUser.fromRow(results.first);
+      return LocalDatabaseUser.fromRow(results.first);
     }
   }
 
   // A function to give the notes_view.dart the ability to associate a Firebase user with a Database User
-  Future<DatabaseUser> getOrCreateUser({
+  Future<LocalDatabaseUser> getOrCreateUser({
     required String email,
     bool setAsCurrentUser = true,
   }) async {
@@ -193,7 +192,8 @@ class NotesService {
   }
 
   // Returns a note with its owner
-  Future<DatabaseNote> createNote({required DatabaseUser owner}) async {
+  Future<LocalDatabaseNote> createNote(
+      {required LocalDatabaseUser owner}) async {
     await _ensureDbIsOpen();
     final db = _getDatabaseOrThrow();
 
@@ -212,7 +212,7 @@ class NotesService {
       isSyncedWithCloudColumn: 1,
     });
 
-    final note = DatabaseNote(
+    final note = LocalDatabaseNote(
       id: notesId,
       userId: owner.id,
       text: text,
@@ -254,7 +254,7 @@ class NotesService {
   }
 
   // returns a specific note
-  Future<DatabaseNote> getNote({required int id}) async {
+  Future<LocalDatabaseNote> getNote({required int id}) async {
     await _ensureDbIsOpen();
     final db = _getDatabaseOrThrow();
     final notes = await db.query(
@@ -266,7 +266,7 @@ class NotesService {
     if (notes.isEmpty) {
       throw CouldNotFindNoteException();
     } else {
-      final note = DatabaseNote.fromRow(notes.first);
+      final note = LocalDatabaseNote.fromRow(notes.first);
       // updating the cache before returning the note from the database
       _notes.removeWhere((note) => note.id == id);
       _notes.add(note);
@@ -275,14 +275,14 @@ class NotesService {
     }
   }
 
-  Future<Iterable<DatabaseNote>> getAllNotes() async {
+  Future<Iterable<LocalDatabaseNote>> getAllNotes() async {
     await _ensureDbIsOpen();
     final db = _getDatabaseOrThrow();
     final notes = await db.query(
       noteTable,
     );
 
-    final result = notes.map((notesRow) => DatabaseNote.fromRow(notesRow));
+    final result = notes.map((notesRow) => LocalDatabaseNote.fromRow(notesRow));
 
     if (notes.isEmpty) {
       throw CouldNotFindNoteException();
@@ -291,8 +291,8 @@ class NotesService {
     return result;
   }
 
-  Future<DatabaseNote> updateNote({
-    required DatabaseNote note,
+  Future<LocalDatabaseNote> updateNote({
+    required LocalDatabaseNote note,
     required String text,
   }) async {
     await _ensureDbIsOpen();
@@ -328,17 +328,17 @@ class NotesService {
 
 // dart representations of the database
 @immutable // because it is const
-class DatabaseUser {
+class LocalDatabaseUser {
   final int id;
   final String email;
-  const DatabaseUser({
+  const LocalDatabaseUser({
     required this.id,
     required this.email,
   });
   // a row inside the user table
   // database will fetch the values and create its represntation of the data using the data read from here
   // Map<String, Object?>
-  DatabaseUser.fromRow(
+  LocalDatabaseUser.fromRow(
       Map<String, Object?> map) // this is a constructor short-hand
       : id = map[idColumn] as int,
         email = map[emailColumn] as String;
@@ -347,27 +347,31 @@ class DatabaseUser {
   String toString() => "Person, ID = $id, email: $email";
 
   @override
-  bool operator ==(covariant DatabaseUser other) => id == other.id;
+  bool operator ==(covariant LocalDatabaseUser other) => id == other.id;
 
   @override
   int get hashCode => id.hashCode;
 }
 
-class DatabaseNote {
+class LocalDatabaseNote {
   final int id;
   final int userId;
   final String text;
   final bool isSyncedWithCloud;
-  const DatabaseNote({
+  const LocalDatabaseNote({
     required this.id,
     required this.userId,
     required this.text,
     required this.isSyncedWithCloud,
   });
-  // a row inside the user table
-  // database will fetch the values and create its represntation of the data using the data read from here
-  // Map<String, Object?>
-  DatabaseNote.fromRow(
+
+  // A row inside the user table.
+  // Database will fetch the values and create its represntation of the data
+  // using the data read from here;
+  // The object with which we read our SQLite database from:
+  //    Map<String, Object?> map
+  // and then we create instances of our LocalDatabaseNote from the above object
+  LocalDatabaseNote.fromRow(
       Map<String, Object?> map) // this is a constructor short-hand
       : id = map[idColumn] as int,
         userId = map[userIdColumn] as int,
@@ -380,31 +384,8 @@ class DatabaseNote {
       "Note, ID = $id, user_Id: $userId, isSyncedWithCloud: $isSyncedWithCloud, text: $text";
 
   @override
-  bool operator ==(covariant DatabaseNote other) => id == other.id;
+  bool operator ==(covariant LocalDatabaseNote other) => id == other.id;
 
   @override
   int get hashCode => id.hashCode;
 }
-
-const dbName = "notes.db";
-const noteTable = "note";
-const userTable = "user";
-const idColumn = "id";
-const userIdColumn = "user_id";
-const emailColumn = "email";
-const textColumn = "text";
-const isSyncedWithCloudColumn = "is_synced_with_cloud";
-const createUserTable = '''CREATE TABLE IF NOT EXISTS "user" (
-        "id"	INTEGER NOT NULL,
-        "email"	TEXT NOT NULL UNIQUE,
-        PRIMARY KEY("id" AUTOINCREMENT)
-      );''';
-
-const createNoteTable = '''CREATE TABLE IF NOT EXISTS "note" (
-        "id"	INTEGER NOT NULL,
-        "user_id"	INTEGER NOT NULL,
-        "text"	TEXT,
-        "is_synced_with_cloud"	INTEGER NOT NULL DEFAULT 0,
-        FOREIGN KEY("user_id") REFERENCES "user"("id"),
-        PRIMARY KEY("id" AUTOINCREMENT)
-      );''';
