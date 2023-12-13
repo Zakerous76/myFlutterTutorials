@@ -3,7 +3,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:myfirsttutorial/services/cloud_crud/cloud_note.dart';
 import 'package:myfirsttutorial/services/cloud_crud/cloud_storage_constants.dart';
 import 'package:myfirsttutorial/services/cloud_crud/cloud_storage_exceptions.dart';
-import 'package:myfirsttutorial/services/local_crud/crud_exceptions.dart';
 
 class FirebaseCloudStorage {
   // Making [FirebaseCloudStorage] a singleton
@@ -42,15 +41,21 @@ class FirebaseCloudStorage {
 
   // CRUD
   // C: A function to create new notes
-  void creatNewNote({required String ownerUserId}) async {
+  Future<CloudNote> creatNewNote({required String ownerUserId}) async {
     // Firestore is a NoSQL database, it is document based. There is no real
     // like in SQLite. You provide key-value pairs [Map]s. Everything that is
     // added to the Collection/Database is going to be packaged into a document,
     // with the fields (keys) and the values (values) that we have provided.
-    await notes.add({
+    final document = await notes.add({
       ownerUserIdFieldName: ownerUserId,
       textFieldName: "",
     });
+    final fetchedNote = await document.get();
+    return CloudNote(
+      documentId: fetchedNote.id,
+      ownerUserId: ownerUserId,
+      text: "",
+    );
   }
 
   // R: A function to get notes by user ID
@@ -71,15 +76,8 @@ class FirebaseCloudStorage {
           // is used when a [Future] completes. It returns a value of that
           // [Future] which can be used to a synchronous value or another
           // future. (value) is the documents from the query
-          .then((value) => value.docs.map((doc) {
-                // We are creating instances of our [CloudNote] right here
-                return CloudNote(
-                  documentId: doc.id,
-                  ownerUserId: doc.data()[ownerUserId]
-                      as String, // as string was not in the .fromSnapshot constructor
-                  text: doc.data()[textFieldName] as String,
-                );
-              }));
+          .then(
+              (value) => value.docs.map((doc) => CloudNote.fromSnapshot(doc)));
     } catch (e) {
       throw CouldNotGetAllNotesException();
     }

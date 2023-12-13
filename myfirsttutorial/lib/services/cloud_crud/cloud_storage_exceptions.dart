@@ -12,4 +12,4 @@ class CouldNotGetAllNotesException extends CloudStorageException {}
 class CouldNotUpdateNoteException extends CloudStorageException {}
 
 // D
-class CouldNoteDeleteNoteException extends CloudStorageException {}
+class CouldNotDeleteNoteException extends CloudStorageException {}
