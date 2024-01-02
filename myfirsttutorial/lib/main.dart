@@ -9,7 +9,9 @@ import 'package:myfirsttutorial/services/auth/auth_service.dart';
 import 'package:myfirsttutorial/views/login_view.dart';
 import 'package:myfirsttutorial/views/notes/create_update_notes_view.dart';
 import 'package:myfirsttutorial/views/notes/notes_view.dart';
+import 'package:myfirsttutorial/views/onboarding_view.dart';
 import 'package:myfirsttutorial/views/register_view.dart';
+import 'package:myfirsttutorial/views/sign_in_up_view.dart';
 import 'package:myfirsttutorial/views/verify_email_view.dart';
 
 void main() async {
@@ -31,6 +33,9 @@ void main() async {
       registerRoute: (context) => const RegisterView(),
       notesRoute: (context) => const NotesView(),
       mainRoute: (context) => const HomePage(),
+      onboardingRoute: (context) => const OnboardingView(),
+      signInUpRoute: (context) => const SignInUpView(),
+
       verifyEmailRoute: (context) => const VerifyEmailView(),
       createOrUpdateNoteRoute: (context) => const CreateUpdateNoteView(),
     },
@@ -55,7 +60,7 @@ class HomePage extends StatelessWidget {
                   return const VerifyEmailView();
                 }
               } else {
-                return const LoginView();
+                return const OnboardingView();
               }
             // // "If the user is non-null, take it. If the user is null then take false"
             // if (user?.emailVerified ?? false) {
